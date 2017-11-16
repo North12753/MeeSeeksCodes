@@ -1,57 +1,44 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.Servo;
 
-@Autonomous (name = "Autonomous")
-public class MeeSeeksAutonomus extends LinearOpMode {
+@TeleOp (name = "TeleOp#1")
+public class MeeSeeksTeleOp extends OpMode {
+    private DcMotor leftmotor, rightmotor, liftmotor;
+    private Servo leftservo, rightservo;
 
-    private static final int NEVEREST_40_REV_1_ENCODER_UNITS_PER_REVOLUTION = 1120;
-    private static final double WHEEL_DIAMETER_IN_INCHES = 4;
-    private static final double GEAR_RATIO = 1.5;
 
-    private int convertInchesToEncoderUnits(double in) {
-        double wheelRotations = in / (Math.PI * WHEEL_DIAMETER_IN_INCHES);
-        double encoderUnitsPerWheelRotation = NEVEREST_40_REV_1_ENCODER_UNITS_PER_REVOLUTION * GEAR_RATIO;
-        return (int) (wheelRotations * encoderUnitsPerWheelRotation);
+    @Override
+    public void init() {
+        leftmotor = hardwareMap.dcMotor.get("leftmotor");
+        rightmotor = hardwareMap.dcMotor.get("rightmotor");
+
+        leftservo = hardwareMap.servo.get("leftservo");
+        rightservo = hardwareMap.servo.get("rightservo");
+        liftmotor = hardwareMap.dcMotor.get("liftmotor");
+
+        leftmotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
     }
 
     @Override
-    public void runOpMode() throws InterruptedException {
-        AutoTransitioner.transitionOnStop(this, "TeleOp#1");
-        waitForStart();
-        DcMotor leftmotor = hardwareMap.dcMotor.get("leftmotor");
-        DcMotor rightmotor = hardwareMap.dcMotor.get("rightmotor");
+    public void loop() {
+        leftmotor.setPower(gamepad1.left_stick_y);
+        rightmotor.setPower(gamepad1.right_stick_y);
 
+        if (gamepad2.left_trigger > 0) {
+            leftservo.setPosition(0);
+            rightservo.setPosition(1);
 
-        leftmotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightmotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        while (leftmotor.getCurrentPosition() != 0 || rightmotor.getCurrentPosition() != 0);
-        leftmotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rightmotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        leftmotor.setPower(-.5);
-        rightmotor.setPower(.5);
-        leftmotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightmotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftmotor.setTargetPosition(leftmotor.getCurrentPosition() + convertInchesToEncoderUnits(16));
-        rightmotor.setTargetPosition(rightmotor.getCurrentPosition() + convertInchesToEncoderUnits(16));
-
-        while (opModeIsActive() && (leftmotor.isBusy() && rightmotor.isBusy()));
-        leftmotor.setPower(0);
-        rightmotor.setPower(0);
-
-        while(opModeIsActive()) {
-            waitTimer(1);
+        } else if (gamepad2.right_trigger > 0) {
+            leftservo.setPosition(1);
+            rightservo.setPosition(0);
         }
-    }
+        liftmotor.setPower(gamepad2.right_stick_y);
 
-    public void waitTimer(double seconds) {
-        ElapsedTime timer = new ElapsedTime();
-        timer.reset();
-        while(timer.seconds() < seconds) {
-            idle();
+    }
+}
